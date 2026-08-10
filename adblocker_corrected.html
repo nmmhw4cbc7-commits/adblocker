@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple AdBlocker</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a4f33d' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L12 18V6c3.31 0 6 2.69 6 6 0 3.31-2.69 6-6 6z'/%3E%3C/svg%3E">
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --text-main: #e0e0e0;
+            --accent: #a4f33d;
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            max-width: 640px; 
+            margin: 60px auto; 
+            padding: 0 20px; 
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6; 
+        }
+        h1 { color: var(--accent); }
+        code { background: #333; padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+        .btn { 
+            display: inline-block; 
+            background: var(--accent); 
+            color: #000; 
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            text-decoration: none; 
+            margin-top: 10px; 
+            font-weight: bold;
+        }
+        .footer { margin-top: 40px; border-top: 1px solid #333; padding-top: 20px; }
+        .github-icon { width: 24px; height: 24px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <h1>Simple AdBlocker</h1>
+    <p>Eine leichte Chrome-Extension, die bekannte Werbe- und Tracking-Domains blockiert (Manifest V3, <code>declarativeNetRequest</code>).</p>
+    <p>Diese Seite ist eine reine Info-/Download-Seite — Chrome-Extensions laufen nicht direkt über GitHub Pages. Zum Nutzen musst du die Dateien herunterladen und manuell in Chrome laden, oder die Extension über den Chrome Web Store installieren.</p>
+    
+    <!-- Link fixed to point to the repository root/archive -->
+    <a class="btn" href="https://github.com/nmmhw4cbc7-commits/adblocker/archive/refs/heads/main.zip">Quellcode herunterladen (.zip)</a>
+    
+    <h2>Installation (manuell)</h2>
+    <ol>
+        <li>ZIP entpacken</li>
+        <li><code>chrome://extensions</code> in Chrome öffnen</li>
+        <li><strong>Entwicklermodus</strong> aktivieren</li>
+        <li><strong>Entpackte Erweiterung laden</strong> klicken und den entpackten Ordner auswählen</li>
+    </ol>
+    
+    <div class="footer">
+        <a href="https://github.com/nmmhw4cbc7-commits" style="color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px;">
+            <svg class="github-icon" viewBox="0 0 16 16" fill="white">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            GitHub Profil
+        </a>
+    </div>
+</body>
+</html>
