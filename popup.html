@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Simple AdBlocker</title>
+<link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <img src="icons/icon48.png" alt="logo" class="logo" />
+      <h1>Simple AdBlocker</h1>
+    </header>
+
+    <div class="status-card">
+      <div class="status-row">
+        <span id="statusLabel">Protection is on</span>
+        <label class="switch">
+          <input type="checkbox" id="toggleEnabled" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="stats-card">
+      <div class="stat">
+        <span class="stat-number" id="blockedCount">0</span>
+        <span class="stat-label">requests blocked</span>
+      </div>
+      <button id="resetBtn" class="reset-btn">Reset count</button>
+    </div>
+
+    <footer>
+      <p>Blocks common ad &amp; tracker domains using Chrome's declarativeNetRequest API.</p>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
