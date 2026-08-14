@@ -1,66 +1,325 @@
-
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple AdBlocker</title>
-    <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23a4f33d' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L12 18V6c3.31 0 6 2.69 6 6 0 3.31-2.69 6-6 6z'/%3E%3C/svg%3E">
-    <style>
-        :root {
-            --bg-dark: #121212;
-            --text-main: #e0e0e0;
-            --accent: #a4f33d;
-        }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            max-width: 640px; 
-            margin: 60px auto; 
-            padding: 0 20px; 
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            line-height: 1.6; 
-        }
-        h1 { color: var(--accent); }
-        code { background: #333; padding: 2px 6px; border-radius: 4px; color: var(--accent); }
-        .btn { 
-            display: inline-block; 
-            background: var(--accent); 
-            color: #000; 
-            padding: 10px 20px; 
-            border-radius: 6px; 
-            text-decoration: none; 
-            margin-top: 10px; 
-            font-weight: bold;
-        }
-        .footer { margin-top: 40px; border-top: 1px solid #333; padding-top: 20px; }
-        .github-icon { width: 24px; height: 24px; vertical-align: middle; }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lime Adblocker — intercepting requests before they load</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23baff2e' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L12 18V6c3.31 0 6 2.69 6 6 0 3.31-2.69 6-6 6z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d0a;
+    --bg-alt:#0d120d;
+    --line:#1c2a19;
+    --line-bright:#33501f;
+    --text:#dfe8da;
+    --text-dim:#8a9a83;
+    --text-faint:#4c5c47;
+    --accent:#baff2e;
+    --accent-soft:rgba(186,255,46,.1);
+    --warn:#ff6a3d;
+    --warn-soft:rgba(255,106,61,.12);
+    --font-display:'Space Grotesk',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    --font-body:'Inter',sans-serif;
+    --bevel:12px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    background-image:
+      radial-gradient(ellipse at 15% 0%, rgba(186,255,46,.06), transparent 45%),
+      repeating-linear-gradient(0deg, var(--line) 0px, transparent 1px, transparent 64px, var(--line) 65px),
+      repeating-linear-gradient(90deg, var(--line) 0px, transparent 1px, transparent 64px, var(--line) 65px);
+    background-attachment:fixed;
+  }
+  ::selection{background:var(--accent);color:#0a0d0a;}
+  a{color:inherit;}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 24px;}
+
+  /* utility bevel shapes */
+  .bevel{
+    clip-path:polygon(var(--bevel) 0, 100% 0, 100% calc(100% - var(--bevel)), calc(100% - var(--bevel)) 100%, 0 100%, 0 var(--bevel));
+  }
+  .bevel-sm{
+    --bevel:7px;
+    clip-path:polygon(var(--bevel) 0, 100% 0, 100% calc(100% - var(--bevel)), calc(100% - var(--bevel)) 100%, 0 100%, 0 var(--bevel));
+  }
+
+  .mono{font-family:var(--font-mono);}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{content:"";width:16px;height:1px;background:var(--accent);display:inline-block;}
+
+  /* corner crosshairs, technical-drawing feel */
+  .crosshairs{position:relative;}
+  .crosshairs::before,.crosshairs::after,
+  .crosshairs .cx-tr,.crosshairs .cx-bl{
+    content:"";position:absolute;width:14px;height:14px;
+    border:1px solid var(--line-bright);
+  }
+  .crosshairs::before{top:-1px;left:-1px;border-right:none;border-bottom:none;}
+  .crosshairs::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
+  .crosshairs .cx-tr{top:-1px;right:-1px;border-left:none;border-bottom:none;}
+  .crosshairs .cx-bl{bottom:-1px;left:-1px;border-right:none;border-top:none;}
+
+  /* header */
+  header{
+    position:sticky;top:0;z-index:40;
+    background:rgba(10,13,10,.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  header .inner{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 0;
+  }
+  .brand{
+    display:flex;align-items:center;gap:10px;
+    font-family:var(--font-mono);font-weight:600;
+    font-size:14px;letter-spacing:.02em;
+    text-decoration:none;color:var(--text);
+  }
+  .brand svg{width:18px;height:18px;flex:none;}
+  .brand .slash{color:var(--text-faint);}
+  .brand .hi{color:var(--accent);}
+  nav.links{display:flex;align-items:center;gap:28px;font-size:13.5px;}
+  nav.links a{text-decoration:none;color:var(--text-dim);transition:color .15s;}
+  nav.links a:hover{color:var(--accent);}
+  nav.links .gh{display:flex;align-items:center;gap:8px;color:var(--text);}
+  nav.links .gh svg{width:16px;height:16px;}
+
+  /* hero */
+  .hero{padding:80px 0 40px;}
+  .hero-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+  .hero h1{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(34px,6vw,58px);
+    line-height:1.06;
+    letter-spacing:-.01em;
+    margin:18px 0 20px;
+  }
+  .hero h1 .hl{color:var(--accent);}
+  .hero p.lead{
+    max-width:520px;
+    color:var(--text-dim);
+    font-size:16.5px;
+  }
+  .cta-row{display:flex;gap:14px;align-items:center;margin-top:30px;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--font-mono);
+    font-size:13.5px;
+    letter-spacing:.02em;
+    font-weight:600;
+    padding:14px 22px;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    border:1px solid transparent;
+    transition:transform .15s, background .15s, border-color .15s;
+  }
+  .btn-primary{background:var(--accent);color:#0a0d0a;}
+  .btn-primary:hover{transform:translateY(-2px);}
+  .btn-ghost{border-color:var(--line-bright);color:var(--text);background:transparent;}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btn svg{width:14px;height:14px;}
+
+  /* domain strip */
+  .domains{padding:56px 0 10px;}
+  .domains h3{
+    font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--text-dim);font-weight:500;margin-bottom:16px;
+  }
+  .chip-row{display:flex;flex-wrap:wrap;gap:10px;}
+  .chip{
+    font-family:var(--font-mono);font-size:12.5px;
+    padding:8px 12px;border:1px solid var(--line-bright);
+    color:var(--text-dim);position:relative;overflow:hidden;
+  }
+  .chip::after{
+    content:"";position:absolute;left:0;right:100%;top:50%;height:1px;
+    background:var(--warn);transition:right .5s ease;
+  }
+  .chip-row:hover .chip::after,
+  .chip:hover::after{right:0;}
+  .chip:hover{color:var(--text-faint);}
+
+  /* sections */
+  section{padding:76px 0;}
+  .section-head{max-width:600px;margin-bottom:44px;}
+  .section-head h2{
+    font-family:var(--font-display);font-size:clamp(24px,3.4vw,32px);
+    font-weight:600;margin:14px 0 10px;letter-spacing:-.01em;
+  }
+  .section-head p{color:var(--text-dim);font-size:15px;}
+
+  .steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
+  .steps3 .step{background:var(--bg);padding:26px 22px;}
+  .steps3 .step .n{font-family:var(--font-mono);color:var(--warn);font-size:12px;letter-spacing:.08em;}
+  .steps3 .step h4{font-family:var(--font-display);font-size:17px;margin:10px 0 8px;font-weight:600;}
+  .steps3 .step p{color:var(--text-dim);font-size:14px;margin:0;}
+
+  /* install */
+  .install-card{border:1px solid var(--line);background:var(--bg-alt);padding:8px;}
+  .install-step{
+    display:grid;grid-template-columns:60px 1fr;gap:18px;
+    padding:20px 16px;border-bottom:1px solid var(--line);
+  }
+  .install-step:last-child{border-bottom:none;}
+  .install-step .num{
+    font-family:var(--font-mono);color:var(--accent);font-size:20px;font-weight:600;
+  }
+  .install-step .body h5{margin:2px 0 4px;font-family:var(--font-display);font-weight:600;font-size:15.5px;}
+  .install-step .body p{margin:0;color:var(--text-dim);font-size:13.5px;}
+  .install-step code{
+    background:#111611;border:1px solid var(--line-bright);color:var(--accent);
+    padding:2px 7px;font-family:var(--font-mono);font-size:12.5px;
+  }
+
+  footer{border-top:1px solid var(--line);padding:40px 0 60px;}
+  footer .inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;}
+  .gh-link{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text);font-family:var(--font-mono);font-size:13.5px;}
+  .gh-link svg{width:22px;height:22px;}
+  .gh-link:hover{color:var(--accent);}
+  footer .meta{color:var(--text-faint);font-family:var(--font-mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;}
+
+  @media (max-width:720px){
+    nav.links{gap:16px;}
+    nav.links a:not(.gh){display:none;}
+    .steps3{grid-template-columns:1fr;}
+    .install-step{grid-template-columns:40px 1fr;}
+  }
+</style>
 </head>
 <body>
-    <h1>Simple AdBlocker</h1>
-    <p>Eine leichte Chrome-Extension, die bekannte Werbe- und Tracking-Domains blockiert (Manifest V3, <code>declarativeNetRequest</code>).</p>
-    <p>Diese Seite ist eine reine Info-/Download-Seite — Chrome-Extensions laufen nicht direkt über GitHub Pages. Zum Nutzen musst du die Dateien herunterladen und manuell in Chrome laden, oder die Extension über den Chrome Web Store installieren.</p>
-    
-    <!-- Link fixed to point to the repository root/archive -->
-    <a class="btn" href="https://github.com/nmmhw4cbc7-commits/adblocker/archive/refs/heads/main.zip">Quellcode herunterladen (.zip)</a>
-    
-    <h2>Installation (manuell)</h2>
-    <ol>
-        <li>ZIP entpacken</li>
-        <li><code>chrome://extensions</code> in Chrome öffnen</li>
-        <li><strong>Entwicklermodus</strong> aktivieren</li>
-        <li><strong>Entpackte Erweiterung laden</strong> klicken und den entpackten Ordner auswählen</li>
-    </ol>
-    
-    <div class="footer">
-        <a href="https://github.com/nmmhw4cbc7-commits" style="color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px;">
-            <svg class="github-icon" viewBox="0 0 16 16" fill="white">
-                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-            </svg>
-            GitHub Profil
+
+<header>
+  <div class="wrap inner">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M3 9h6"/></svg>
+      LIME<span class="slash">/</span><span class="hi">ADBLOCK</span>
+    </a>
+    <nav class="links">
+      <a href="#how">How it works</a>
+      <a href="#install">Install</a>
+      <a class="gh" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap">
+    <section class="hero">
+      <div class="eyebrow">CHROME-EXTENSION · MANIFEST V3 · DECLARATIVENETREQUEST</div>
+      <h1>Ads aren't hidden.<br>They're <span class="hl">intercepted</span>.</h1>
+      <p class="lead">Lime Adblocker checks every request locally against a ruleset of known ad and tracking domains — before the connection is ever made. No script hides elements after the fact, no data leaves the browser.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary bevel-sm" href="https://github.com/nmmhw4cbc7-commits/adblocker/archive/refs/heads/main.zip">
+          Download source (.zip)
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v13m0 0l-5-5m5 5l5-5M4 21h16"/></svg>
         </a>
-    </div>
+        <a class="btn btn-ghost bevel-sm" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">View repository</a>
+      </div>
+
+    </section>
+
+    <section class="domains">
+      <h3>A sample from the ruleset</h3>
+      <div class="chip-row">
+        <span class="chip">doubleclick.net</span>
+        <span class="chip">googlesyndication.com</span>
+        <span class="chip">adservice.google.com</span>
+        <span class="chip">scorecardresearch.com</span>
+        <span class="chip">adnxs.com</span>
+        <span class="chip">taboola.com</span>
+        <span class="chip">outbrain.com</span>
+        <span class="chip">criteo.com</span>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="section-head">
+        <div class="eyebrow">PROCESS</div>
+        <h2>What happens on every request</h2>
+        <p>Three steps, all running inside the browser — no server, no cloud lookup.</p>
+      </div>
+      <div class="steps3">
+        <div class="step">
+          <div class="n">01 · REQUEST</div>
+          <h4>A resource is requested</h4>
+          <p>Chrome wants to load a script, image, or iframe, triggered by the page you're on.</p>
+        </div>
+        <div class="step">
+          <div class="n">02 · MATCH</div>
+          <h4>The ruleset checks the domain</h4>
+          <p>declarativeNetRequest compares the target against the local blocklist — directly in Chrome, no outside lookup.</p>
+        </div>
+        <div class="step">
+          <div class="n">03 · DECISION</div>
+          <h4>Drop or allow</h4>
+          <p>On a match, the connection is never made in the first place. Everything else loads unchanged.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="install">
+      <div class="section-head">
+        <div class="eyebrow">SETUP</div>
+        <h2>Installation</h2>
+        <p>Not yet listed on the Chrome Web Store — until then, install manually in four steps.</p>
+      </div>
+      <div class="install-card bevel crosshairs">
+        <span class="cx-tr"></span><span class="cx-bl"></span>
+        <div class="install-step">
+          <div class="num">01</div>
+          <div class="body"><h5>Unzip the archive</h5><p>Extract the downloaded source code locally.</p></div>
+        </div>
+        <div class="install-step">
+          <div class="num">02</div>
+          <div class="body"><h5>Open extensions</h5><p>Go to <code>chrome://extensions</code> in the address bar.</p></div>
+        </div>
+        <div class="install-step">
+          <div class="num">03</div>
+          <div class="body"><h5>Enable developer mode</h5><p>Toggle the switch in the top-right corner of the page.</p></div>
+        </div>
+        <div class="install-step">
+          <div class="num">04</div>
+          <div class="body"><h5>Load the unpacked extension</h5><p>Click the corresponding button and select the unzipped folder.</p></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap inner">
+    <a class="gh-link" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      View GitHub profile
+    </a>
+    <div class="meta">Open source · No tracking · No data collection</div>
+  </div>
+</footer>
+
 </body>
 </html>
