@@ -3,208 +3,254 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lime Adblocker — intercepting requests before they load</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23baff2e' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L12 18V6c3.31 0 6 2.69 6 6 0 3.31-2.69 6-6 6z'/%3E%3C/svg%3E">
+<title>Lime Adblocker — blocks requests before they load</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%234a7a1e'/%3E%3Cpath d='M0 0h14L0 14z' fill='%23f5f6f1'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Martian+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0a0d0a;
-    --bg-alt:#0d120d;
-    --line:#1c2a19;
-    --line-bright:#33501f;
-    --text:#dfe8da;
-    --text-dim:#8a9a83;
-    --text-faint:#4c5c47;
-    --accent:#baff2e;
-    --accent-soft:rgba(186,255,46,.1);
-    --warn:#ff6a3d;
-    --warn-soft:rgba(255,106,61,.12);
-    --font-display:'Space Grotesk',sans-serif;
-    --font-mono:'JetBrains Mono',monospace;
-    --font-body:'Inter',sans-serif;
-    --bevel:12px;
+    --bg:#f5f6f1;
+    --surface:#ffffff;
+    --surface-alt:#eceee4;
+    --ink:#14160f;
+    --ink-dim:#565b4c;
+    --ink-faint:#93998a;
+    --line:#d7dbcd;
+    --line-strong:#b7bda8;
+    --accent:#4a7a1e;
+    --accent-strong:#375d16;
+    --accent-soft:#e2ecd3;
+    --flag:#a8431f;
+    --flag-soft:#f4e3da;
+    --font-display:'Archivo',sans-serif;
+    --font-mono:'Martian Mono',monospace;
+    --radius:3px;
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
     margin:0;
     background:var(--bg);
-    color:var(--text);
-    font-family:var(--font-body);
+    color:var(--ink);
+    font-family:var(--font-display);
     line-height:1.6;
-    background-image:
-      radial-gradient(ellipse at 15% 0%, rgba(186,255,46,.06), transparent 45%),
-      repeating-linear-gradient(0deg, var(--line) 0px, transparent 1px, transparent 64px, var(--line) 65px),
-      repeating-linear-gradient(90deg, var(--line) 0px, transparent 1px, transparent 64px, var(--line) 65px);
-    background-attachment:fixed;
   }
-  ::selection{background:var(--accent);color:#0a0d0a;}
   a{color:inherit;}
-  .wrap{max-width:1040px;margin:0 auto;padding:0 24px;}
-
-  /* utility bevel shapes */
-  .bevel{
-    clip-path:polygon(var(--bevel) 0, 100% 0, 100% calc(100% - var(--bevel)), calc(100% - var(--bevel)) 100%, 0 100%, 0 var(--bevel));
-  }
-  .bevel-sm{
-    --bevel:7px;
-    clip-path:polygon(var(--bevel) 0, 100% 0, 100% calc(100% - var(--bevel)), calc(100% - var(--bevel)) 100%, 0 100%, 0 var(--bevel));
-  }
-
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px;}
   .mono{font-family:var(--font-mono);}
-  .eyebrow{
-    font-family:var(--font-mono);
-    font-size:11.5px;
-    letter-spacing:.14em;
-    text-transform:uppercase;
-    color:var(--accent);
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .eyebrow::before{content:"";width:16px;height:1px;background:var(--accent);display:inline-block;}
-
-  /* corner crosshairs, technical-drawing feel */
-  .crosshairs{position:relative;}
-  .crosshairs::before,.crosshairs::after,
-  .crosshairs .cx-tr,.crosshairs .cx-bl{
-    content:"";position:absolute;width:14px;height:14px;
-    border:1px solid var(--line-bright);
-  }
-  .crosshairs::before{top:-1px;left:-1px;border-right:none;border-bottom:none;}
-  .crosshairs::after{bottom:-1px;right:-1px;border-left:none;border-top:none;}
-  .crosshairs .cx-tr{top:-1px;right:-1px;border-left:none;border-bottom:none;}
-  .crosshairs .cx-bl{bottom:-1px;left:-1px;border-right:none;border-top:none;}
 
   /* header */
   header{
-    position:sticky;top:0;z-index:40;
-    background:rgba(10,13,10,.85);
-    backdrop-filter:blur(10px);
+    background:var(--bg);
     border-bottom:1px solid var(--line);
   }
   header .inner{
     display:flex;align-items:center;justify-content:space-between;
-    padding:18px 0;
+    padding:20px 0;
   }
   .brand{
     display:flex;align-items:center;gap:10px;
     font-family:var(--font-mono);font-weight:600;
-    font-size:14px;letter-spacing:.02em;
-    text-decoration:none;color:var(--text);
+    font-size:13.5px;letter-spacing:.03em;
+    text-decoration:none;color:var(--ink);
+    text-transform:lowercase;
   }
-  .brand svg{width:18px;height:18px;flex:none;}
-  .brand .slash{color:var(--text-faint);}
-  .brand .hi{color:var(--accent);}
-  nav.links{display:flex;align-items:center;gap:28px;font-size:13.5px;}
-  nav.links a{text-decoration:none;color:var(--text-dim);transition:color .15s;}
-  nav.links a:hover{color:var(--accent);}
-  nav.links .gh{display:flex;align-items:center;gap:8px;color:var(--text);}
-  nav.links .gh svg{width:16px;height:16px;}
+  .brand .mark{
+    width:18px;height:18px;background:var(--accent);
+    clip-path:polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 42%, 42% 0);
+    flex:none;
+  }
+  nav.links{display:flex;align-items:center;gap:30px;font-size:14px;}
+  nav.links a{text-decoration:none;color:var(--ink-dim);}
+  nav.links a:hover{color:var(--accent-strong);}
+  .gh-btn{
+    font-family:var(--font-mono);font-size:12.5px;
+    border:1px solid var(--line-strong);border-radius:var(--radius);
+    padding:8px 14px;display:flex;align-items:center;gap:8px;
+    text-decoration:none;color:var(--ink);
+  }
+  .gh-btn:hover{border-color:var(--accent);color:var(--accent-strong);}
+  .gh-btn svg{width:15px;height:15px;}
 
   /* hero */
-  .hero{padding:80px 0 40px;}
-  .hero-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+  .hero{padding:64px 0 76px;}
+  .hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;}
   .hero h1{
-    font-family:var(--font-display);
+    font-size:clamp(30px,4vw,42px);
     font-weight:700;
-    font-size:clamp(34px,6vw,58px);
-    line-height:1.06;
+    line-height:1.15;
     letter-spacing:-.01em;
-    margin:18px 0 20px;
+    margin:0 0 20px;
   }
-  .hero h1 .hl{color:var(--accent);}
-  .hero p.lead{
-    max-width:520px;
-    color:var(--text-dim);
-    font-size:16.5px;
-  }
-  .cta-row{display:flex;gap:14px;align-items:center;margin-top:30px;flex-wrap:wrap;}
+  .hero p.lead{color:var(--ink-dim);font-size:15.5px;max-width:460px;margin:0 0 28px;}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;}
   .btn{
     font-family:var(--font-mono);
-    font-size:13.5px;
-    letter-spacing:.02em;
+    font-size:13px;
     font-weight:600;
-    padding:14px 22px;
+    padding:13px 20px;
+    border-radius:var(--radius);
     text-decoration:none;
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
+    display:inline-block;
     border:1px solid transparent;
-    transition:transform .15s, background .15s, border-color .15s;
   }
-  .btn-primary{background:var(--accent);color:#0a0d0a;}
-  .btn-primary:hover{transform:translateY(-2px);}
-  .btn-ghost{border-color:var(--line-bright);color:var(--text);background:transparent;}
-  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
-  .btn svg{width:14px;height:14px;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{background:var(--accent-strong);}
+  .btn-outline{border-color:var(--line-strong);color:var(--ink);}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent-strong);}
+  .meta-line{
+    margin:24px 0 0;font-size:13px;color:var(--ink-faint);
+  }
 
-  /* domain strip */
-  .domains{padding:56px 0 10px;}
-  .domains h3{
-    font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--text-dim);font-weight:500;margin-bottom:16px;
+  /* hero network panel — the signature element */
+  .hero-panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
   }
-  .chip-row{display:flex;flex-wrap:wrap;gap:10px;}
-  .chip{
-    font-family:var(--font-mono);font-size:12.5px;
-    padding:8px 12px;border:1px solid var(--line-bright);
-    color:var(--text-dim);position:relative;overflow:hidden;
+  .panel-bar{
+    display:flex;align-items:center;gap:6px;
+    padding:10px 12px;border-bottom:1px solid var(--line);
+    background:var(--surface-alt);
   }
-  .chip::after{
-    content:"";position:absolute;left:0;right:100%;top:50%;height:1px;
-    background:var(--warn);transition:right .5s ease;
+  .panel-bar .dot{width:7px;height:7px;border-radius:50%;background:var(--line-strong);}
+  .panel-url{
+    font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);
+    margin-left:8px;
   }
-  .chip-row:hover .chip::after,
-  .chip:hover::after{right:0;}
-  .chip:hover{color:var(--text-faint);}
+  .panel-head-row{
+    display:grid;grid-template-columns:1fr 92px 60px;
+    padding:8px 12px;font-family:var(--font-mono);
+    font-size:10px;color:var(--ink-faint);
+    border-bottom:1px solid var(--line);
+    text-transform:lowercase;
+  }
+  ul.log{list-style:none;margin:0;padding:0;}
+  .row{
+    display:grid;grid-template-columns:1fr 92px 60px;
+    align-items:center;gap:6px;
+    padding:11px 12px;
+    border-bottom:1px solid var(--line);
+    font-family:var(--font-mono);font-size:11.5px;
+    opacity:0;transform:translateY(4px);
+    animation:rowIn .4s ease forwards;
+  }
+  .row:last-child{border-bottom:none;}
+  .row:nth-child(1){animation-delay:.05s;}
+  .row:nth-child(2){animation-delay:.15s;}
+  .row:nth-child(3){animation-delay:.25s;}
+  .row:nth-child(4){animation-delay:.35s;}
+  .row:nth-child(5){animation-delay:.45s;}
+  @keyframes rowIn{to{opacity:1;transform:none;}}
+  .row .req{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .row .req .method{color:var(--ink-faint);margin-right:6px;}
+  .row .domain{color:var(--ink-dim);font-size:11px;}
+  .row .status{font-size:10px;text-transform:lowercase;padding:3px 7px;border-radius:var(--radius);text-align:center;}
+  .row.is-blocked .domain{text-decoration:line-through;text-decoration-color:var(--flag);text-decoration-thickness:1px;}
+  .row.is-blocked .status{background:var(--accent-soft);color:var(--accent-strong);}
+  .row.is-allowed .status{background:var(--surface-alt);color:var(--ink-faint);}
+  @media(prefers-reduced-motion:reduce){
+    .row{animation:none;opacity:1;transform:none;}
+  }
 
   /* sections */
-  section{padding:76px 0;}
-  .section-head{max-width:600px;margin-bottom:44px;}
+  section{padding:72px 0;border-top:1px solid var(--line);}
+  .section-head{max-width:560px;margin-bottom:36px;}
   .section-head h2{
-    font-family:var(--font-display);font-size:clamp(24px,3.4vw,32px);
-    font-weight:600;margin:14px 0 10px;letter-spacing:-.01em;
+    font-size:clamp(22px,3vw,28px);font-weight:700;
+    margin:0 0 10px;letter-spacing:-.01em;
   }
-  .section-head p{color:var(--text-dim);font-size:15px;}
+  .section-head p{color:var(--ink-dim);font-size:14.5px;margin:0;}
 
-  .steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
-  .steps3 .step{background:var(--bg);padding:26px 22px;}
-  .steps3 .step .n{font-family:var(--font-mono);color:var(--warn);font-size:12px;letter-spacing:.08em;}
-  .steps3 .step h4{font-family:var(--font-display);font-size:17px;margin:10px 0 8px;font-weight:600;}
-  .steps3 .step p{color:var(--text-dim);font-size:14px;margin:0;}
+  /* ruleset file panel */
+  .file-panel{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    max-width:480px;overflow:hidden;
+  }
+  .file-bar{
+    font-family:var(--font-mono);font-size:11.5px;color:var(--ink-dim);
+    padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface-alt);
+  }
+  ol.file-lines{
+    list-style:none;counter-reset:line;margin:0;padding:14px 0;
+  }
+  ol.file-lines li{
+    counter-increment:line;
+    font-family:var(--font-mono);font-size:12.5px;color:var(--ink);
+    padding:5px 16px;display:flex;gap:16px;
+  }
+  ol.file-lines li::before{
+    content:counter(line);color:var(--ink-faint);width:16px;text-align:right;flex:none;
+  }
+  .file-foot{
+    font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);
+    padding:10px 16px;border-top:1px solid var(--line);
+  }
+
+  /* how it works — single connected flow, not a card grid */
+  .flow-panel{
+    display:flex;align-items:stretch;
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--surface);overflow:hidden;
+  }
+  .flow-stage{padding:24px 22px;flex:1;}
+  .flow-stage.stage-b{background:var(--surface-alt);}
+  .flow-stage p.stage-label{
+    margin:0 0 8px;font-weight:600;font-size:15px;
+  }
+  .flow-stage p.stage-detail{margin:0;color:var(--ink-dim);font-size:13.5px;}
+  .flow-arrow{
+    display:flex;align-items:center;justify-content:center;
+    padding:0 14px;color:var(--ink-faint);font-family:var(--font-mono);font-size:14px;
+    border-left:1px solid var(--line);border-right:1px solid var(--line);
+    background:var(--surface);
+  }
+  @media(max-width:780px){
+    .flow-panel{flex-direction:column;}
+    .flow-arrow{border-left:none;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:8px;}
+  }
 
   /* install */
-  .install-card{border:1px solid var(--line);background:var(--bg-alt);padding:8px;}
-  .install-step{
-    display:grid;grid-template-columns:60px 1fr;gap:18px;
-    padding:20px 16px;border-bottom:1px solid var(--line);
+  .install-panel{
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+    max-width:620px;
   }
-  .install-step:last-child{border-bottom:none;}
-  .install-step .num{
-    font-family:var(--font-mono);color:var(--accent);font-size:20px;font-weight:600;
+  ol.install-list{list-style:none;margin:0;padding:0;counter-reset:step;}
+  ol.install-list li{
+    counter-increment:step;
+    display:grid;grid-template-columns:44px 1fr;gap:16px;
+    padding:20px 20px;border-bottom:1px solid var(--line);
   }
-  .install-step .body h5{margin:2px 0 4px;font-family:var(--font-display);font-weight:600;font-size:15.5px;}
-  .install-step .body p{margin:0;color:var(--text-dim);font-size:13.5px;}
-  .install-step code{
-    background:#111611;border:1px solid var(--line-bright);color:var(--accent);
-    padding:2px 7px;font-family:var(--font-mono);font-size:12.5px;
+  ol.install-list li:last-child{border-bottom:none;}
+  ol.install-list li::before{
+    content:counter(step,decimal-leading-zero);
+    font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--accent);
+  }
+  .install-panel h5{margin:0 0 4px;font-size:15px;font-weight:700;}
+  .install-panel p{margin:0;color:var(--ink-dim);font-size:13.5px;}
+  .install-panel code{
+    background:var(--surface-alt);border:1px solid var(--line);
+    padding:2px 6px;font-family:var(--font-mono);font-size:12px;border-radius:var(--radius);
   }
 
-  footer{border-top:1px solid var(--line);padding:40px 0 60px;}
-  footer .inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;}
-  .gh-link{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--text);font-family:var(--font-mono);font-size:13.5px;}
-  .gh-link svg{width:22px;height:22px;}
-  .gh-link:hover{color:var(--accent);}
-  footer .meta{color:var(--text-faint);font-family:var(--font-mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;}
+  footer{border-top:1px solid var(--line);padding:36px 0;}
+  footer .inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+  .gh-link{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--font-mono);font-size:13px;}
+  .gh-link svg{width:18px;height:18px;}
+  .gh-link:hover{color:var(--accent-strong);}
+  footer .meta{color:var(--ink-faint);font-family:var(--font-mono);font-size:11.5px;}
 
-  @media (max-width:720px){
-    nav.links{gap:16px;}
-    nav.links a:not(.gh){display:none;}
-    .steps3{grid-template-columns:1fr;}
-    .install-step{grid-template-columns:40px 1fr;}
+  @media (max-width:820px){
+    .hero-inner{grid-template-columns:1fr;}
+  }
+  @media (max-width:640px){
+    nav.links a:not(.gh-btn){display:none;}
+    .row{grid-template-columns:1fr 60px;}
+    .panel-head-row{grid-template-columns:1fr 60px;}
+    .row .domain{display:none;}
+    .panel-head-row span:nth-child(2){display:none;}
   }
 </style>
 </head>
@@ -213,13 +259,13 @@
 <header>
   <div class="wrap inner">
     <a class="brand" href="#top">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18"/><path d="M9 3v18M3 9h6"/></svg>
-      LIME<span class="slash">/</span><span class="hi">ADBLOCK</span>
+      <span class="mark"></span>
+      lime / adblock
     </a>
     <nav class="links">
       <a href="#how">How it works</a>
       <a href="#install">Install</a>
-      <a class="gh" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">
+      <a class="gh-btn" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub
       </a>
@@ -229,83 +275,111 @@
 
 <main id="top">
   <div class="wrap">
-    <section class="hero">
-      <div class="eyebrow">CHROME-EXTENSION · MANIFEST V3 · DECLARATIVENETREQUEST</div>
-      <h1>Ads aren't hidden.<br>They're <span class="hl">intercepted</span>.</h1>
-      <p class="lead">Lime Adblocker checks every request locally against a ruleset of known ad and tracking domains — before the connection is ever made. No script hides elements after the fact, no data leaves the browser.</p>
-      <div class="cta-row">
-        <a class="btn btn-primary bevel-sm" href="https://github.com/nmmhw4cbc7-commits/adblocker/archive/refs/heads/main.zip">
-          Download source (.zip)
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v13m0 0l-5-5m5 5l5-5M4 21h16"/></svg>
-        </a>
-        <a class="btn btn-ghost bevel-sm" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">View repository</a>
-      </div>
+    <section class="hero" style="border-top:none;">
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <h1>Blocks ad requests before your browser makes them.</h1>
+          <p class="lead">Lime Adblocker checks every outgoing request against a local ruleset of known ad and tracking domains, using Chrome's declarativeNetRequest API. Matches never leave the browser: nothing is fetched, and nothing is hidden after the fact.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/nmmhw4cbc7-commits/adblocker/archive/refs/heads/main.zip">Download source (.zip)</a>
+            <a class="btn btn-outline" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">View repository</a>
+          </div>
+          <p class="meta-line">249 rules today, running on Manifest V3. Not listed on the Chrome Web Store yet.</p>
+        </div>
 
+        <div class="hero-panel" aria-hidden="true">
+          <div class="panel-bar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="panel-url">example.com</span>
+          </div>
+          <div class="panel-head-row"><span>request</span><span>domain</span><span>status</span></div>
+          <ul class="log">
+            <li class="row is-blocked">
+              <span class="req"><span class="method">GET</span>/pagead/js/adsbygoogle.js</span>
+              <span class="domain">doubleclick.net</span>
+              <span class="status">blocked</span>
+            </li>
+            <li class="row is-allowed">
+              <span class="req"><span class="method">GET</span>/styles/main.css</span>
+              <span class="domain">example.com</span>
+              <span class="status">allowed</span>
+            </li>
+            <li class="row is-blocked">
+              <span class="req"><span class="method">GET</span>/px.gif</span>
+              <span class="domain">scorecardresearch.com</span>
+              <span class="status">blocked</span>
+            </li>
+            <li class="row is-allowed">
+              <span class="req"><span class="method">GET</span>/api/products</span>
+              <span class="domain">example.com</span>
+              <span class="status">allowed</span>
+            </li>
+            <li class="row is-blocked">
+              <span class="req"><span class="method">GET</span>/outstream.js</span>
+              <span class="domain">taboola.com</span>
+              <span class="status">blocked</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </section>
 
-    <section class="domains">
-      <h3>A sample from the ruleset</h3>
-      <div class="chip-row">
-        <span class="chip">doubleclick.net</span>
-        <span class="chip">googlesyndication.com</span>
-        <span class="chip">adservice.google.com</span>
-        <span class="chip">scorecardresearch.com</span>
-        <span class="chip">adnxs.com</span>
-        <span class="chip">taboola.com</span>
-        <span class="chip">outbrain.com</span>
-        <span class="chip">criteo.com</span>
+    <section id="ruleset">
+      <div class="section-head">
+        <h2>What the ruleset looks like</h2>
+        <p>An excerpt from the local blocklist; each request's domain is checked against entries like these, nothing more.</p>
+      </div>
+      <div class="file-panel">
+        <div class="file-bar">rules/blocklist.txt</div>
+        <ol class="file-lines">
+          <li>doubleclick.net</li>
+          <li>googlesyndication.com</li>
+          <li>adservice.google.com</li>
+          <li>scorecardresearch.com</li>
+          <li>adnxs.com</li>
+          <li>taboola.com</li>
+          <li>outbrain.com</li>
+          <li>criteo.com</li>
+        </ol>
+        <div class="file-foot">8 of 249 rules shown</div>
       </div>
     </section>
 
     <section id="how">
       <div class="section-head">
-        <div class="eyebrow">PROCESS</div>
         <h2>What happens on every request</h2>
-        <p>Three steps, all running inside the browser — no server, no cloud lookup.</p>
+        <p>Three steps, all running inside the browser. No server, no cloud lookup.</p>
       </div>
-      <div class="steps3">
-        <div class="step">
-          <div class="n">01 · REQUEST</div>
-          <h4>A resource is requested</h4>
-          <p>Chrome wants to load a script, image, or iframe, triggered by the page you're on.</p>
+      <div class="flow-panel">
+        <div class="flow-stage stage-a">
+          <p class="stage-label">Chrome requests a resource</p>
+          <p class="stage-detail">Triggered by a script, image, or iframe on the page you're on.</p>
         </div>
-        <div class="step">
-          <div class="n">02 · MATCH</div>
-          <h4>The ruleset checks the domain</h4>
-          <p>declarativeNetRequest compares the target against the local blocklist — directly in Chrome, no outside lookup.</p>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-stage stage-b">
+          <p class="stage-label">The ruleset checks the domain</p>
+          <p class="stage-detail">declarativeNetRequest compares it against the local blocklist, directly in Chrome.</p>
         </div>
-        <div class="step">
-          <div class="n">03 · DECISION</div>
-          <h4>Drop or allow</h4>
-          <p>On a match, the connection is never made in the first place. Everything else loads unchanged.</p>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-stage stage-c">
+          <p class="stage-label">Match: dropped. No match: it loads.</p>
+          <p class="stage-detail">The connection is never made in the first place. Everything else is unaffected.</p>
         </div>
       </div>
     </section>
 
     <section id="install">
       <div class="section-head">
-        <div class="eyebrow">SETUP</div>
         <h2>Installation</h2>
-        <p>Not yet listed on the Chrome Web Store — until then, install manually in four steps.</p>
+        <p>Not yet listed on the Chrome Web Store, so it's a manual install for now, four steps.</p>
       </div>
-      <div class="install-card bevel crosshairs">
-        <span class="cx-tr"></span><span class="cx-bl"></span>
-        <div class="install-step">
-          <div class="num">01</div>
-          <div class="body"><h5>Unzip the archive</h5><p>Extract the downloaded source code locally.</p></div>
-        </div>
-        <div class="install-step">
-          <div class="num">02</div>
-          <div class="body"><h5>Open extensions</h5><p>Go to <code>chrome://extensions</code> in the address bar.</p></div>
-        </div>
-        <div class="install-step">
-          <div class="num">03</div>
-          <div class="body"><h5>Enable developer mode</h5><p>Toggle the switch in the top-right corner of the page.</p></div>
-        </div>
-        <div class="install-step">
-          <div class="num">04</div>
-          <div class="body"><h5>Load the unpacked extension</h5><p>Click the corresponding button and select the unzipped folder.</p></div>
-        </div>
+      <div class="install-panel">
+        <ol class="install-list">
+          <li><div><h5>Unzip the archive</h5><p>Extract the downloaded source code locally.</p></div></li>
+          <li><div><h5>Open extensions</h5><p>Go to <code>chrome://extensions</code> in the address bar.</p></div></li>
+          <li><div><h5>Enable developer mode</h5><p>Toggle the switch in the top-right corner of the page.</p></div></li>
+          <li><div><h5>Load the unpacked extension</h5><p>Click the corresponding button and select the unzipped folder.</p></div></li>
+        </ol>
       </div>
     </section>
   </div>
@@ -317,7 +391,7 @@
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       View GitHub profile
     </a>
-    <div class="meta">Open source · No tracking · No data collection</div>
+    <div class="meta">Open source · No tracking · Runs locally</div>
   </div>
 </footer>
 
