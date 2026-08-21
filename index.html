@@ -103,56 +103,24 @@
     margin:24px 0 0;font-size:13px;color:var(--ink-faint);
   }
 
-  /* hero network panel — the signature element */
-  .hero-panel{
+  /* hero mockup — iPhone-shaped product shot */
+  .hero-mockup{
+    display:flex;justify-content:center;
+  }
+  .phone-frame{
+    width:100%;max-width:300px;
+    aspect-ratio:9/19.5;
     background:var(--surface);
     border:1px solid var(--line);
-    border-radius:var(--radius);
-    overflow:hidden;
+    border-radius:34px;
+    padding:14px;
+    position:relative;
   }
-  .panel-bar{
-    display:flex;align-items:center;gap:6px;
-    padding:10px 12px;border-bottom:1px solid var(--line);
-    background:var(--surface-alt);
-  }
-  .panel-bar .dot{width:7px;height:7px;border-radius:50%;background:var(--line-strong);}
-  .panel-url{
-    font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);
-    margin-left:8px;
-  }
-  .panel-head-row{
-    display:grid;grid-template-columns:1fr 92px 60px;
-    padding:8px 12px;font-family:var(--font-mono);
-    font-size:10px;color:var(--ink-faint);
-    border-bottom:1px solid var(--line);
-    text-transform:lowercase;
-  }
-  ul.log{list-style:none;margin:0;padding:0;}
-  .row{
-    display:grid;grid-template-columns:1fr 92px 60px;
-    align-items:center;gap:6px;
-    padding:11px 12px;
-    border-bottom:1px solid var(--line);
-    font-family:var(--font-mono);font-size:11.5px;
-    opacity:0;transform:translateY(4px);
-    animation:rowIn .4s ease forwards;
-  }
-  .row:last-child{border-bottom:none;}
-  .row:nth-child(1){animation-delay:.05s;}
-  .row:nth-child(2){animation-delay:.15s;}
-  .row:nth-child(3){animation-delay:.25s;}
-  .row:nth-child(4){animation-delay:.35s;}
-  .row:nth-child(5){animation-delay:.45s;}
-  @keyframes rowIn{to{opacity:1;transform:none;}}
-  .row .req{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .row .req .method{color:var(--ink-faint);margin-right:6px;}
-  .row .domain{color:var(--ink-dim);font-size:11px;}
-  .row .status{font-size:10px;text-transform:lowercase;padding:3px 7px;border-radius:var(--radius);text-align:center;}
-  .row.is-blocked .domain{text-decoration:line-through;text-decoration-color:var(--flag);text-decoration-thickness:1px;}
-  .row.is-blocked .status{background:var(--accent-soft);color:var(--accent-strong);}
-  .row.is-allowed .status{background:var(--surface-alt);color:var(--ink-faint);}
-  @media(prefers-reduced-motion:reduce){
-    .row{animation:none;opacity:1;transform:none;}
+  .phone-frame img{
+    width:100%;height:100%;
+    object-fit:cover;
+    border-radius:22px;
+    display:block;
   }
 
   /* sections */
@@ -287,39 +255,10 @@
           <p class="meta-line">249 rules today, running on Manifest V3. Not listed on the Chrome Web Store yet.</p>
         </div>
 
-        <div class="hero-panel" aria-hidden="true">
-          <div class="panel-bar">
-            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span class="panel-url">example.com</span>
+        <div class="hero-mockup">
+          <div class="phone-frame">
+            <img src="mockup.png" alt="Lime Adblocker running in Chrome on iPhone" />
           </div>
-          <div class="panel-head-row"><span>request</span><span>domain</span><span>status</span></div>
-          <ul class="log">
-            <li class="row is-blocked">
-              <span class="req"><span class="method">GET</span>/pagead/js/adsbygoogle.js</span>
-              <span class="domain">doubleclick.net</span>
-              <span class="status">blocked</span>
-            </li>
-            <li class="row is-allowed">
-              <span class="req"><span class="method">GET</span>/styles/main.css</span>
-              <span class="domain">example.com</span>
-              <span class="status">allowed</span>
-            </li>
-            <li class="row is-blocked">
-              <span class="req"><span class="method">GET</span>/px.gif</span>
-              <span class="domain">scorecardresearch.com</span>
-              <span class="status">blocked</span>
-            </li>
-            <li class="row is-allowed">
-              <span class="req"><span class="method">GET</span>/api/products</span>
-              <span class="domain">example.com</span>
-              <span class="status">allowed</span>
-            </li>
-            <li class="row is-blocked">
-              <span class="req"><span class="method">GET</span>/outstream.js</span>
-              <span class="domain">taboola.com</span>
-              <span class="status">blocked</span>
-            </li>
-          </ul>
         </div>
       </div>
     </section>
