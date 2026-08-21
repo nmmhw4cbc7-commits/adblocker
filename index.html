@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%234a7a1e'/%3E%3Cpath d='M0 0h14L0 14z' fill='%23f5f6f1'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Martian+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#f5f6f1;
@@ -24,7 +24,7 @@
     --flag:#a8431f;
     --flag-soft:#f4e3da;
     --font-display:'Archivo',sans-serif;
-    --font-mono:'Martian Mono',monospace;
+    --font-mono:'Archivo',sans-serif;
     --radius:3px;
   }
   *{box-sizing:border-box;}
@@ -75,7 +75,7 @@
 
   /* hero */
   .hero{padding:64px 0 76px;}
-  .hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;}
+  .hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:stretch;}
   .hero h1{
     font-size:clamp(30px,4vw,42px);
     font-weight:700;
@@ -105,11 +105,12 @@
 
   /* hero mockup — iPhone-shaped product shot */
   .hero-mockup{
-    display:flex;justify-content:center;
+    display:flex;justify-content:center;align-items:center;
+    height:100%;
   }
   .hero-mockup img{
-    width:100%;
-    height:auto;
+    width:100%;height:100%;
+    object-fit:contain;
     display:block;
   }
 
@@ -122,29 +123,28 @@
   }
   .section-head p{color:var(--ink-dim);font-size:14.5px;margin:0;}
 
-  /* ruleset file panel */
-  .file-panel{
-    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-    max-width:480px;overflow:hidden;
+  /* trust section — big count-up number */
+  #trust{padding:0;}
+  .trust-panel{
+    min-height:56vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;
+    border-top:1px solid var(--line);
+    padding:80px 24px;
   }
-  .file-bar{
-    font-family:var(--font-mono);font-size:11.5px;color:var(--ink-dim);
-    padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface-alt);
+  .trust-number{
+    font-size:clamp(72px,16vw,180px);
+    font-weight:800;
+    letter-spacing:-.03em;
+    line-height:1;
+    margin:0;
+    color:var(--accent-strong);
+    font-variant-numeric:tabular-nums;
   }
-  ol.file-lines{
-    list-style:none;counter-reset:line;margin:0;padding:14px 0;
-  }
-  ol.file-lines li{
-    counter-increment:line;
-    font-family:var(--font-mono);font-size:12.5px;color:var(--ink);
-    padding:5px 16px;display:flex;gap:16px;
-  }
-  ol.file-lines li::before{
-    content:counter(line);color:var(--ink-faint);width:16px;text-align:right;flex:none;
-  }
-  .file-foot{
-    font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);
-    padding:10px 16px;border-top:1px solid var(--line);
+  .trust-label{
+    margin:14px 0 0;
+    font-size:clamp(15px,1.8vw,19px);
+    color:var(--ink-dim);
   }
 
   /* how it works — single connected flow, not a card grid */
@@ -251,24 +251,10 @@
       </div>
     </section>
 
-    <section id="ruleset">
-      <div class="section-head">
-        <h2>What the ruleset looks like</h2>
-        <p>An excerpt from the local blocklist; each request's domain is checked against entries like these, nothing more.</p>
-      </div>
-      <div class="file-panel">
-        <div class="file-bar">rules/blocklist.txt</div>
-        <ol class="file-lines">
-          <li>doubleclick.net</li>
-          <li>googlesyndication.com</li>
-          <li>adservice.google.com</li>
-          <li>scorecardresearch.com</li>
-          <li>adnxs.com</li>
-          <li>taboola.com</li>
-          <li>outbrain.com</li>
-          <li>criteo.com</li>
-        </ol>
-        <div class="file-foot">8 of 249 rules shown</div>
+    <section id="trust">
+      <div class="trust-panel">
+        <p class="trust-number" data-target="2000">0</p>
+        <p class="trust-label">people already trust Lime Adblocker.</p>
       </div>
     </section>
 
@@ -321,6 +307,48 @@
     <div class="meta">Open source · No tracking · Runs locally</div>
   </div>
 </footer>
+
+<script>
+  (function(){
+    var el = document.querySelector('.trust-number');
+    if(!el) return;
+    var target = parseInt(el.dataset.target, 10) || 0;
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function render(n){
+      el.textContent = n.toLocaleString('en-US') + '+';
+    }
+
+    if(reduceMotion){
+      render(target);
+      return;
+    }
+
+    function countUp(){
+      var duration = 1100;
+      var start = null;
+      function step(ts){
+        if(start === null) start = ts;
+        var progress = Math.min((ts - start) / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        render(Math.floor(eased * target));
+        if(progress < 1) requestAnimationFrame(step);
+        else render(target);
+      }
+      requestAnimationFrame(step);
+    }
+
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          countUp();
+          observer.disconnect();
+        }
+      });
+    }, { threshold: 0.5 });
+    observer.observe(el);
+  })();
+</script>
 
 </body>
 </html>
