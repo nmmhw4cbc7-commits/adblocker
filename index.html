@@ -90,7 +90,7 @@
     font-family:var(--font-mono);
     font-size:13px;
     font-weight:600;
-    padding:13px 20px;
+    padding:0 20px;
     border-radius:var(--radius);
     text-decoration:none;
     display:inline-block;
@@ -100,6 +100,7 @@
   }
   .btn .btn-label{
     display:block;
+    padding:13px 0;
     transition:transform .38s cubic-bezier(.76,0,.24,1);
   }
   .btn::after{
@@ -112,10 +113,12 @@
     font-family:var(--font-mono);
     font-size:13px;
     font-weight:600;
+    white-space:nowrap;
     transform:translateY(110%);
     transition:transform .38s cubic-bezier(.76,0,.24,1);
     pointer-events:none;
   }
+  .btn[data-text]{white-space:nowrap;min-width:290px;text-align:center;}
   .btn:hover .btn-label{transform:translateY(-110%);}
   .btn:hover::after{transform:translateY(0);}
   .btn-primary{background:var(--accent);color:#fff;}
