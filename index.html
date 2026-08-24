@@ -75,16 +75,17 @@
 
   /* hero */
   .hero{padding:64px 0 76px;}
-  .hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:stretch;}
+  .hero-inner{display:flex;flex-direction:column;align-items:center;text-align:center;}
   .hero h1{
     font-size:clamp(30px,4vw,42px);
     font-weight:700;
     line-height:1.15;
     letter-spacing:-.01em;
-    margin:0 0 20px;
+    margin:0 auto;
+    max-width:760px;
   }
-  .hero p.lead{color:var(--ink-dim);font-size:15.5px;max-width:460px;margin:0 0 28px;}
-  .cta-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .hero p.lead{color:var(--ink-dim);font-size:15.5px;max-width:460px;margin:0 auto 28px;}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
   .btn{
     font-family:var(--font-mono);
     font-size:13px;
@@ -125,16 +126,22 @@
     margin:24px 0 0;font-size:13px;color:var(--ink-faint);
   }
 
-  /* hero mockup — iPhone-shaped product shot */
+  /* hero mockup — large centered shot, overlapping the headline's bottom edge */
   .hero-mockup{
     display:flex;justify-content:center;align-items:center;
-    height:100%;
+    width:100%;
+    margin:-22px 0 8px;
+    position:relative;
+    z-index:1;
   }
   .hero-mockup img{
-    width:100%;height:100%;
+    width:100%;
+    max-width:620px;
+    height:auto;
     object-fit:contain;
     display:block;
   }
+  .hero-copy{width:100%;display:flex;flex-direction:column;align-items:center;}
 
   /* sections */
   section{padding:72px 0;border-top:1px solid var(--line);}
@@ -236,8 +243,8 @@
   .gh-link:hover{color:var(--accent-strong);}
   footer .meta{color:var(--ink-faint);font-family:var(--font-mono);font-size:11.5px;}
 
-  @media (max-width:820px){
-    .hero-inner{grid-template-columns:1fr;}
+  @media (max-width:640px){
+    .hero-mockup{margin-top:-14px;}
   }
   @media (max-width:640px){
     nav.links a:not(.gh-btn){display:none;}
@@ -270,18 +277,19 @@
   <div class="wrap">
     <section class="hero" style="border-top:none;">
       <div class="hero-inner">
+        <h1>Blocks ad requests before your browser makes them.</h1>
+
+        <div class="hero-mockup">
+          <img src="limeblocker-mainpage.png" alt="Lime Adblocker running in Chrome" />
+        </div>
+
         <div class="hero-copy">
-          <h1>Blocks ad requests before your browser makes them.</h1>
           <p class="lead">Lime Adblocker checks every outgoing request against a local ruleset of known ad and tracking domains, using Chrome's declarativeNetRequest API. Matches never leave the browser: nothing is fetched, and nothing is hidden after the fact.</p>
           <div class="cta-row">
             <a class="btn btn-primary" href="https://github.com/nmmhw4cbc7-commits/adblocker/archive/refs/heads/main.zip">Download Adblocker (.zip)</a>
             <a class="btn btn-outline" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">View repository</a>
           </div>
           <p class="meta-line">249 rules today, running on Manifest V3. Not listed on the Chrome Web Store yet.</p>
-        </div>
-
-        <div class="hero-mockup">
-          <img src="mockup.png" alt="Lime Adblocker running in Chrome on iPhone" />
         </div>
       </div>
     </section>
