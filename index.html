@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<script>
+  (function(){
+    try{
+      var saved = localStorage.getItem('lime-theme');
+      if(saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+        document.documentElement.setAttribute('data-theme','dark');
+      }
+    }catch(e){}
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Lime Adblocker — blocks requests before they load</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%234a7a1e'/%3E%3Cpath d='M0 0h14L0 14z' fill='%23f5f6f1'/%3E%3C/svg%3E">
@@ -27,6 +37,22 @@
     --font-mono:'Archivo',sans-serif;
     --radius:3px;
   }
+  :root[data-theme="dark"]{
+    --bg:#14160f;
+    --surface:#1b1e15;
+    --surface-alt:#22261a;
+    --ink:#f2f3ec;
+    --ink-dim:#b6bda7;
+    --ink-faint:#7c8468;
+    --line:#333a26;
+    --line-strong:#48512f;
+    --accent:#7cc93e;
+    --accent-strong:#96e058;
+    --accent-soft:#243019;
+    --flag:#e0774a;
+    --flag-soft:#3a2419;
+  }
+  body{transition:background-color .25s ease,color .25s ease;}
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
@@ -72,6 +98,17 @@
   }
   .gh-btn:hover{border-color:var(--accent);color:var(--accent-strong);}
   .gh-btn svg{width:15px;height:15px;}
+  .theme-toggle{
+    display:flex;align-items:center;justify-content:center;
+    width:34px;height:34px;flex:none;
+    border:1px solid var(--line-strong);border-radius:var(--radius);
+    background:transparent;color:var(--ink);cursor:pointer;padding:0;
+  }
+  .theme-toggle:hover{border-color:var(--accent);color:var(--accent-strong);}
+  .theme-toggle svg{width:16px;height:16px;}
+  .theme-toggle .icon-moon{display:none;}
+  [data-theme="dark"] .theme-toggle .icon-sun{display:none;}
+  [data-theme="dark"] .theme-toggle .icon-moon{display:block;}
 
   /* hero */
   .hero{padding:64px 0 76px;}
@@ -285,6 +322,10 @@
     </a>
     <nav class="links">
       <a href="#install">Install</a>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
       <a class="gh-btn" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub
@@ -364,7 +405,7 @@
       <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       View GitHub profile
     </a>
-    <div class="meta">Open source · No tracking · Runs locally</div>
+    <div class="meta">Open source · No tracking · Runs locally · Updated <span id="last-updated">…</span></div>
   </div>
 </footer>
 
@@ -376,6 +417,24 @@
     </div>
   </div>
 </div>
+
+<script>
+  (function(){
+    var root = document.documentElement;
+    var btn = document.getElementById('theme-toggle');
+    if(!btn) return;
+    btn.addEventListener('click', function(){
+      var isDark = root.getAttribute('data-theme') === 'dark';
+      var next = isDark ? 'light' : 'dark';
+      if(next === 'dark'){
+        root.setAttribute('data-theme','dark');
+      }else{
+        root.removeAttribute('data-theme');
+      }
+      try{ localStorage.setItem('lime-theme', next); }catch(e){}
+    });
+  })();
+</script>
 
 <script>
   (function(){
@@ -435,6 +494,26 @@
         try{ localStorage.setItem(KEY, '1'); }catch(e){}
       });
     }
+  })();
+</script>
+
+<script>
+  (function(){
+    var el = document.getElementById('last-updated');
+    if(!el) return;
+    fetch('https://api.github.com/repos/nmmhw4cbc7-commits/adblocker/commits?per_page=1')
+      .then(function(res){
+        if(!res.ok) throw new Error('GitHub API error');
+        return res.json();
+      })
+      .then(function(data){
+        if(!Array.isArray(data) || !data[0]) throw new Error('No commits');
+        var date = new Date(data[0].commit.author.date);
+        el.textContent = date.toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+      })
+      .catch(function(){
+        el.textContent = 'recently';
+      });
   })();
 </script>
 
