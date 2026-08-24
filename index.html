@@ -257,6 +257,22 @@
     .row .domain{display:none;}
     .panel-head-row span:nth-child(2){display:none;}
   }
+  /* cookie banner */
+  #cookie-banner{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    background:var(--surface);border-top:1px solid var(--line);
+    box-shadow:0 -6px 20px rgba(0,0,0,.06);
+  }
+  #cookie-banner .inner{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:20px;flex-wrap:wrap;padding:16px 0;
+  }
+  #cookie-banner p{
+    margin:0;font-size:13.5px;color:var(--ink-dim);max-width:640px;
+  }
+  #cookie-banner .cookie-actions{display:flex;gap:10px;flex:none;}
+  #cookie-banner .btn{padding:10px 16px;font-size:12.5px;}
+  #cookie-banner[hidden]{display:none;}
 </style>
 </head>
 <body>
@@ -352,6 +368,15 @@
   </div>
 </footer>
 
+<div id="cookie-banner" hidden>
+  <div class="wrap inner">
+    <p>This site uses a single essential cookie-free local storage flag to remember that you've dismissed this notice. No tracking, no third-party cookies.</p>
+    <div class="cookie-actions">
+      <a class="btn btn-primary" href="javascript:void(0)" id="cookie-accept">Got it</a>
+    </div>
+  </div>
+</div>
+
 <script>
   (function(){
     var el = document.querySelector('.trust-number');
@@ -391,6 +416,25 @@
       });
     }, { threshold: 0.5 });
     observer.observe(el);
+  })();
+  (function(){
+    var KEY = 'lime-cookie-notice-dismissed';
+    var banner = document.getElementById('cookie-banner');
+    if(!banner) return;
+    try{
+      if(!localStorage.getItem(KEY)){
+        banner.hidden = false;
+      }
+    }catch(e){
+      banner.hidden = false;
+    }
+    var btn = document.getElementById('cookie-accept');
+    if(btn){
+      btn.addEventListener('click', function(){
+        banner.hidden = true;
+        try{ localStorage.setItem(KEY, '1'); }catch(e){}
+      });
+    }
   })();
 </script>
 
