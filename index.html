@@ -90,7 +90,7 @@
     font-family:var(--font-mono);
     font-size:13px;
     font-weight:600;
-    padding:0 20px;
+    padding:13px 20px;
     border-radius:var(--radius);
     text-decoration:none;
     display:inline-block;
@@ -98,7 +98,8 @@
     position:relative;
     overflow:hidden;
   }
-  .btn .btn-label{
+  .btn.btn-swap{padding:0 20px;}
+  .btn-swap .btn-label{
     display:block;
     padding:13px 0;
     transition:transform .38s cubic-bezier(.76,0,.24,1);
@@ -118,7 +119,7 @@
     transition:transform .38s cubic-bezier(.76,0,.24,1);
     pointer-events:none;
   }
-  .btn[data-text]{white-space:nowrap;min-width:290px;text-align:center;}
+  .btn-swap{white-space:nowrap;min-width:290px;text-align:center;}
   .btn:hover .btn-label{transform:translateY(-110%);}
   .btn:hover::after{transform:translateY(0);}
   .btn-primary{background:var(--accent);color:#fff;}
@@ -289,7 +290,7 @@
         <div class="hero-copy">
           <p class="lead">Lime Adblocker checks every outgoing request against a local ruleset of known ad and tracking domains, using Chrome's declarativeNetRequest API. Matches never leave the browser: nothing is fetched, and nothing is hidden after the fact.</p>
           <div class="cta-row">
-            <a class="btn btn-primary" href="https://github.com/nmmhw4cbc7-commits/adblocker/archive/refs/heads/main.zip" data-text="Download the best Adblocker in the World"><span class="btn-label">Download Adblocker (.zip)</span></a>
+            <a class="btn btn-primary btn-swap" href="https://github.com/nmmhw4cbc7-commits/adblocker/archive/refs/heads/main.zip" data-text="Download the best Adblocker in the World"><span class="btn-label">Download Adblocker (.zip)</span></a>
             <a class="btn btn-outline" href="https://github.com/nmmhw4cbc7-commits" target="_blank" rel="noopener">View repository</a>
           </div>
           <p class="meta-line">249 rules today, running on Manifest V3. Not listed on the Chrome Web Store yet.</p>
