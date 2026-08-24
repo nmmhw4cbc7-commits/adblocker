@@ -130,13 +130,13 @@
   .hero-mockup{
     display:flex;justify-content:center;align-items:center;
     width:100%;
-    margin:-22px 0 8px;
+    margin:clamp(-90px,-9vw,-50px) 0 8px;
     position:relative;
     z-index:1;
   }
   .hero-mockup img{
     width:100%;
-    max-width:620px;
+    max-width:680px;
     height:auto;
     object-fit:contain;
     display:block;
@@ -244,7 +244,7 @@
   footer .meta{color:var(--ink-faint);font-family:var(--font-mono);font-size:11.5px;}
 
   @media (max-width:640px){
-    .hero-mockup{margin-top:-14px;}
+    .hero-mockup{margin-top:-36px;}
   }
   @media (max-width:640px){
     nav.links a:not(.gh-btn){display:none;}
