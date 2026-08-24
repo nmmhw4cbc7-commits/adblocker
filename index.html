@@ -246,9 +246,16 @@ padding:20px 20px;border-bottom:1px solid var(--line);
 }
 ol.install-list li:last-child{border-bottom:none;}
 ol.install-list li::before{
-content:counter(step,decimal-leading-zero);
-font-family:var(--font-mono);font-weight:600;font-size:15px;color:var(--accent);
-align-self:start;
+content:counter(step);
+display:flex;
+align-items:center;
+justify-content:center;
+width:34px;height:34px;
+border-radius:50%;
+background:var(--accent);
+color:#fff;
+font-family:var(--font-mono);font-weight:800;font-size:15px;
+justify-self:center;
 }
 .install-panel h5{margin:0 0 4px;font-size:15px;font-weight:700;}
 .install-panel p{margin:0;color:var(--ink-dim);font-size:13.5px;}
@@ -344,7 +351,7 @@ GitHub
 <section id="install">
 <div class="section-head">
 <h2>Installation</h2>
-<p> Four Step Manual</p>
+<p>Open code. No shady Extension Store. Manual install for now, four steps.</p>
 </div>
 <div class="install-panel">
 <ol class="install-list">
