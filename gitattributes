@@ -1,0 +1,3 @@
+# Landingpage zählt nicht als "Code" fürs Repo — nur die Extension soll die
+# Sprachstatistik (Languages-Balken) auf GitHub bestimmen.
+index.html linguist-documentation
