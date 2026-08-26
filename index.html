@@ -411,6 +411,25 @@ View GitHub profile
 (function(){
 var root = document.documentElement;
 var btn = document.getElementById('theme-toggle');
+var mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+function applySystemTheme(e){
+try{
+if(localStorage.getItem('lime-theme')) return; // Nutzer hat manuell übersteuert
+}catch(err){}
+if(e.matches){
+root.setAttribute('data-theme','dark');
+}else{
+root.removeAttribute('data-theme');
+}
+}
+
+if(mq.addEventListener){
+mq.addEventListener('change', applySystemTheme);
+}else if(mq.addListener){
+mq.addListener(applySystemTheme);
+}
+
 if(!btn) return;
 btn.addEventListener('click', function(){
 var isDark = root.getAttribute('data-theme') === 'dark';
