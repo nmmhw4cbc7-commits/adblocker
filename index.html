@@ -121,6 +121,25 @@ margin:0 auto;
 max-width:820px;
 }
 .hero p.lead{color:var(--ink-dim);font-size:15.5px;max-width:460px;margin:0 auto 28px;}
+.circled{position:relative;display:inline-block;white-space:nowrap;padding:0 .02em;}
+.circled .circle-mark{
+position:absolute;
+left:-6%;right:-6%;top:-30%;bottom:-26%;
+width:112%;height:156%;
+overflow:visible;
+pointer-events:none;
+transform:rotate(-1.5deg);
+}
+.circled .circle-mark path{
+fill:none;
+stroke:var(--accent);
+stroke-linecap:round;
+stroke-linejoin:round;
+}
+.circled .circle-mark .stroke-1{stroke-width:5;}
+.circled .circle-mark .stroke-2{stroke-width:4;opacity:.85;}
+.circled .circle-mark .stroke-3{stroke-width:3;opacity:.7;}
+.circled .circle-mark .scratch{stroke-width:3;opacity:.6;}
 .cta-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
 .btn{
 font-family:var(--font-mono);
@@ -335,7 +354,7 @@ GitHub
 <div class="wrap">
 <section class="hero" style="border-top:none;">
 <div class="hero-inner">
-<h1>Blocks ad requests before your browser makes them.</h1>
+<h1>Blocks ad requests <span class="circled">before<svg class="circle-mark" viewBox="0 0 200 90" preserveAspectRatio="none" aria-hidden="true"><path class="stroke-1" d="M112,8 C72,0 32,5 16,22 C0,40 4,58 26,68 C54,80 102,83 146,74 C176,68 194,54 190,36 C187,22 164,9 136,6 C126,5 118,6 122,9"/><path class="stroke-2" d="M96,6 C58,2 24,12 10,30 C-2,46 6,60 32,66 C60,72 96,72 90,70"/><path class="stroke-3" d="M40,64 C76,78 130,78 166,62 C186,53 196,40 188,26"/><path class="scratch" d="M110,4 C118,3 126,4 132,7"/></svg></span> your browser makes them.</h1>
 <div class="hero-mockup">
 <img src="limeblocker-mainpage.png" alt="Lime Adblocker running in Chrome" />
 </div>
