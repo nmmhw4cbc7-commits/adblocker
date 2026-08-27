@@ -1,20 +1,55 @@
 // background.js - service worker for Simple AdBlocker
 
 const RULESET_ID = "ruleset_ads";
+const WL_RULE_BASE = 20000;
+
+const ALL_RESOURCE_TYPES = [
+  "script", "image", "xmlhttprequest", "sub_frame",
+  "media", "stylesheet", "font", "other"
+];
+
+async function syncWhitelistRules(whitelist) {
+  const existing = await chrome.declarativeNetRequest.getDynamicRules();
+  const oldIds = existing
+    .filter((r) => r.id >= WL_RULE_BASE)
+    .map((r) => r.id);
+
+  const newRules = whitelist.map((domain, i) => ({
+    id: WL_RULE_BASE + i,
+    priority: 2,
+    action: { type: "allow" },
+    condition: {
+      initiatorDomains: [domain],
+      resourceTypes: ALL_RESOURCE_TYPES
+    }
+  }));
+
+  await chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: oldIds,
+    addRules: newRules
+  });
+}
 
 // Initialize badge and enabled state on install
 chrome.runtime.onInstalled.addListener(async () => {
-  const { enabled } = await chrome.storage.local.get("enabled");
+  const { enabled, whitelist } = await chrome.storage.local.get(["enabled", "whitelist"]);
   if (enabled === undefined) {
-    await chrome.storage.local.set({ enabled: true, blockedCount: 0 });
+    await chrome.storage.local.set({ enabled: true, blockedCount: 0, whitelist: [] });
   }
   updateRulesetState();
   updateBadge();
+  if (whitelist && whitelist.length) {
+    await syncWhitelistRules(whitelist);
+  }
 });
 
-chrome.runtime.onStartup.addListener(() => {
+chrome.runtime.onStartup.addListener(async () => {
   updateRulesetState();
   updateBadge();
+  const { whitelist = [] } = await chrome.storage.local.get("whitelist");
+  if (whitelist.length) {
+    await syncWhitelistRules(whitelist);
+  }
 });
 
 async function updateRulesetState() {
@@ -68,6 +103,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "RESET_COUNT") {
     chrome.storage.local.set({ blockedCount: 0 }).then(() => {
       updateBadge();
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+  if (message.type === "UPDATE_WHITELIST") {
+    syncWhitelistRules(message.whitelist || []).then(() => {
       sendResponse({ success: true });
     });
     return true;
