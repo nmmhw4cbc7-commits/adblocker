@@ -80,12 +80,24 @@ async function updateBadge() {
   chrome.action.setBadgeBackgroundColor({ color: "#d93025" });
 }
 
-// Count blocked requests via the matched rules feedback API
+// Count blocked requests and log history via the matched rules feedback API
+const MAX_HISTORY = 200;
+
 if (chrome.declarativeNetRequest.onRuleMatchedDebug) {
-  chrome.declarativeNetRequest.onRuleMatchedDebug.addListener(async () => {
-    const { blockedCount } = await chrome.storage.local.get("blockedCount");
+  chrome.declarativeNetRequest.onRuleMatchedDebug.addListener(async (info) => {
+    const { blockedCount, history = [] } = await chrome.storage.local.get(["blockedCount", "history"]);
     const newCount = (blockedCount || 0) + 1;
-    await chrome.storage.local.set({ blockedCount: newCount });
+
+    const entry = {
+      url: info.request?.url || "",
+      initiator: info.request?.initiator || "",
+      type: info.request?.type || "",
+      timestamp: Date.now()
+    };
+    history.unshift(entry);
+    if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+
+    await chrome.storage.local.set({ blockedCount: newCount, history });
     updateBadge();
   });
 }
@@ -109,6 +121,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.type === "UPDATE_WHITELIST") {
     syncWhitelistRules(message.whitelist || []).then(() => {
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+  if (message.type === "GET_HISTORY") {
+    chrome.storage.local.get("history").then(({ history = [] }) => {
+      sendResponse({ history });
+    });
+    return true;
+  }
+  if (message.type === "CLEAR_HISTORY") {
+    chrome.storage.local.set({ history: [] }).then(() => {
       sendResponse({ success: true });
     });
     return true;
